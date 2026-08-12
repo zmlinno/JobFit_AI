@@ -1,6 +1,10 @@
 from fastapi import APIRouter,HTTPException
 from pydantic import BaseModel
 
+from app.database.database import get_db
+from app.models.user import User
+from app.schemas.auth import RegisterRequest
+from sqlalchemy import select
 #创建一个路由对象
 router = APIRouter()
 
@@ -48,5 +52,26 @@ def login(login_data:LoginRequest):
 
 
 #注册接口
+router = APIRouter()
+
+
 @router.post("/register")
-def register(register_data:RegisterRequest):
+def register(
+    register_data: RegisterRequest,
+    db: Session = Depends(get_db)
+):
+
+    stmt = select(User).where(
+        User.username == register_data.username
+    )
+    existing_user = db.execute(stmt).scalar_one_or_none()
+
+    if existing_user:
+        raise HTTPException(
+            status_code = 409,
+            detail = "账号已经存在"
+        )
+
+        return{
+            "message":"账号已经注册"
+        }
