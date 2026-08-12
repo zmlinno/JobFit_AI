@@ -3,12 +3,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from app.models.user import User
 from app.database.database import Base,engine
-
+from app.api.auth import router as auth_router
 
 app = FastAPI()
 
-
 Base.metadata.create_all(bind = engine)
+app.include_router(
+    auth_router,
+    prefix="/auth"
+)
+
 
 #允许前端访问后端
 

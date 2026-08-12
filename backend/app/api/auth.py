@@ -1,10 +1,15 @@
-from fastapi import APIRouter,HTTPException
+from fastapi import APIRouter,HTTPException,Depends
+from sqlalchemy.orm import Session
+
 from pydantic import BaseModel
 
 from app.database.database import get_db
 from app.models.user import User
 from app.schemas.auth import RegisterRequest
 from sqlalchemy import select
+from app.core.security import hash_password
+from app.schemas.auth import LoginRequest
+
 #创建一个路由对象
 router = APIRouter()
 
@@ -12,14 +17,7 @@ router = APIRouter()
 
 
 
-#暂时模拟数据库中的用户
-FAKE_USER = 
-{
-    "id" : 1,
-    "email":"test@example.com",
-    "password":"123456",
-    "name":"测试用户"
-}
+
 
 
 #登陆接口
@@ -71,7 +69,13 @@ def register(
             status_code = 409,
             detail = "账号已经存在"
         )
+    hashed_password = hash_password(
+        register_data.password
+    )
 
-        return{
-            "message":"账号已经注册"
-        }
+    print("原始密码: ",register_data.password)
+    print("哈希密码: ",hashed_password)
+
+    return{
+        "message":"密码哈希成功"
+    }
