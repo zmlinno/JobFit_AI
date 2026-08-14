@@ -12,7 +12,7 @@ const Hero: React.FC = () => {
   const { searchJobs } = useJobs({ autoFetch: false });
   const navigate = useNavigate();
 
-  const dreamWords = useMemo(() => ['Dream', 'Perfect', 'Ideal', 'Next', 'Amazing'], []);
+  const dreamWords = useMemo(() => ['Job Search', 'Resume Analysis', 'AI Matching', 'Career Growth'], []);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
 
   useEffect(() => {
@@ -23,12 +23,12 @@ const Hero: React.FC = () => {
   }, [dreamWords.length]);
 
   const popularSearches = useMemo(() => [
-    'Frontend Developer',
-    'Full Stack',
-    'DevOps Engineer',
-    'Product Manager',
-    'UI/UX Designer',
-    'Data Scientist'
+    '개발자',
+    '회계사',
+    '마케팅',
+    '제품 매니저',
+    'UI/UX 디자이너',
+    '데이터 과학자'
   ], []);
 
   const handleSearch = useCallback(async () => {
@@ -61,20 +61,20 @@ const Hero: React.FC = () => {
   const featuresContent = useMemo(() => [
     {
       icon: <Zap className="w-8 h-8 text-white" />,
-      title: 'AI-Powered Matching',
-      description: 'Get personalized job recommendations based on your skills, experience, and career preferences',
+      title: 'AI 기반 맞춤형 매칭',
+      description: '보유 기술과 경력, 커리어 선호도를 바탕으로 개인 맞춤형 채용 공고를 추천해 드립니다.',
       bgColor: 'gradient-bg'
     },
     {
       icon: <Users className="w-8 h-8 text-white" />,
-      title: 'Developer-First',
-      description: 'No whiteboard interviews, salary transparency, and real technical assessments that matter',
+      title: '개발자 중심',
+      description: '화이트보드 코딩 면접 없이, 투명한 연봉 정보와 실무 중심의 기술 역량 평가를 제공합니다.',
       bgColor: 'bg-green-500'
     },
     {
       icon: <TrendingUp className="w-8 h-8 text-white" />,
-      title: 'Quality Over Quantity',
-      description: 'Curated opportunities from companies that value engineering excellence and innovation',
+      title: '양보다 질',
+      description: '기술 역량과 혁신을 중시하는 기업의 채용 공고를 정성스럽게 수집하여 제공합니다.',
       bgColor: 'bg-blue-500'
     }
   ], []);
@@ -140,8 +140,8 @@ const Hero: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            Skip the spray-and-pray approach. Get matched with roles that actually fit your skills, 
-            values, and career goals using our advanced AI algorithms.
+            무작정 여러 곳에 지원하고 운에 맡기는 방식은 이제 그만. 
+            첨단 AI 알고리즘을 통해 여러분의 역량과 가치관, 커리어 목표에 꼭 맞는 직무를 매칭해 드립니다.
           </motion.p>
         </motion.div>
 

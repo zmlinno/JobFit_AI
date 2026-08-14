@@ -54,9 +54,10 @@ def register(
     db: Session = Depends(get_db)
 ):
 
-    stmt = select(User).where(
+    username_stmt = select(User).where(
         User.username == register_data.username
     )
+
     existing_user = db.execute(stmt).scalar_one_or_none()
 
     if existing_user:
@@ -64,6 +65,20 @@ def register(
             status_code = 409,
             detail = "账号已经存在"
         )
+        
+
+    password_stmt = select(User).where(
+        User.password_hash == hash_password(register_data.password)
+    )
+    existing_password = db.execute(password_stmt).scalar_one_or_none()
+    if existing_password:
+        raise HTTPException(
+            status_code = 409,
+            detail = "密码已经存在"
+        )
+
+
+    
     
 
     #检查邮箱是否重复
