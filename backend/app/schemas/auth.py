@@ -4,10 +4,7 @@
 from pydantic import BaseModel
 
 
-#定义前端需要传过来的数据格式
-class LoginRequest(BaseModel):
-    email:str
-    password:str
+
 
 
 
@@ -17,6 +14,12 @@ class RegisterRequest(BaseModel):
     username:str
     password:str
     email:str
-    phone:str
+    
+
+#定义前端需要传过来的数据格式
+#登陆的时候
+class LoginRequest(BaseModel):
+    email:str
+    password:str
 
 

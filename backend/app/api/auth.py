@@ -15,11 +15,6 @@ router = APIRouter()
 
 
 
-
-
-
-
-
 #登陆接口
 @router.post("/login")
 def login(login_data:LoginRequest):
@@ -69,13 +64,40 @@ def register(
             status_code = 409,
             detail = "账号已经存在"
         )
+    
+
+    #检查邮箱是否重复
+    email_stmt = select(User).where(
+        User.email == register_data.email
+    )
+    existing_email = db.execute(email_stmt).scalar_one_or_none()
+    if existing_email:
+        raise HTTPException(
+            status_code = 409,
+            detail = "邮箱已经存在"
+        )
+
+
+    #密码哈希
     hashed_password = hash_password(
         register_data.password
     )
 
-    print("原始密码: ",register_data.password)
-    print("哈希密码: ",hashed_password)
+    #创建用户
+    new_user = User(
+        username = register_data.username,
+        email = register_data.email,
+        password_hash = hashed_password
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
 
-    return{
-        "message":"密码哈希成功"
+    return {
+        "message": "注册成功",
+        "user": {
+            "id": new_user.id,
+            "username": new_user.username,
+            "email": new_user.email
+        }
     }
