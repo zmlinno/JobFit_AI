@@ -1,108 +1,57 @@
-from fastapi import APIRouter,HTTPException,Depends
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from pydantic import BaseModel
-
+from app.core.security import hash_password, verify_password
 from app.database.database import get_db
 from app.models.user import User
-from app.schemas.auth import RegisterRequest
-from sqlalchemy import select
-from app.core.security import hash_password
-from app.schemas.auth import LoginRequest
+from app.schemas.auth import LoginRequest, RegisterRequest
 
-#创建一个路由对象
+
 router = APIRouter()
 
 
-
-#登陆接口
 @router.post("/login")
-def login(login_data:LoginRequest):
+def login(login_data: LoginRequest, db: Session = Depends(get_db)):
+    statement = select(User).where(User.email == login_data.email)
+    user = db.execute(statement).scalar_one_or_none()
 
-    #判断邮箱是否正确
-    if login_data.email != FAKE_USER["email"]:
-        raise HTTPException(
-            status_code = 401,
-            detail="账号密码错误"
-        )
+    if user is None or not verify_password(login_data.password, user.password_hash):
+        raise HTTPException(status_code=401, detail="账号或密码错误")
 
-    if login_data.password != FAKE_USER["password"]:
-        raise HTTPException(
-            status_code = 401,
-            detail = "账号或密码错误"
-        )
-
-
-    #登陆成功后返回用户信息
-    return{
-        "message":"登陆成功",
-        "user":{
-            "id":FAKE_USER["id"],
-            "email":FAKE_USER["email"],
-            "name":FAKE_USER["name"]
-        }
+    return {
+        "message": "登录成功",
+        "user": {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "role": user.role,
+        },
     }
-
-
-#注册接口
-router = APIRouter()
 
 
 @router.post("/register")
 def register(
     register_data: RegisterRequest,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
-
-    username_stmt = select(User).where(
-        User.username == register_data.username
-    )
-
-    existing_user = db.execute(stmt).scalar_one_or_none()
+    username_statement = select(User).where(User.username == register_data.username)
+    existing_user = db.execute(username_statement).scalar_one_or_none()
 
     if existing_user:
-        raise HTTPException(
-            status_code = 409,
-            detail = "账号已经存在"
-        )
-        
+        raise HTTPException(status_code=409, detail="账号已经存在")
 
-    password_stmt = select(User).where(
-        User.password_hash == hash_password(register_data.password)
-    )
-    existing_password = db.execute(password_stmt).scalar_one_or_none()
-    if existing_password:
-        raise HTTPException(
-            status_code = 409,
-            detail = "密码已经存在"
-        )
+    email_statement = select(User).where(User.email == register_data.email)
+    existing_email = db.execute(email_statement).scalar_one_or_none()
 
-
-    
-    
-
-    #检查邮箱是否重复
-    email_stmt = select(User).where(
-        User.email == register_data.email
-    )
-    existing_email = db.execute(email_stmt).scalar_one_or_none()
     if existing_email:
-        raise HTTPException(
-            status_code = 409,
-            detail = "邮箱已经存在"
-        )
+        raise HTTPException(status_code=409, detail="邮箱已经存在")
 
-
-    #密码哈希
-    hashed_password = hash_password(
-        register_data.password
-    )
-
-    #创建用户
     new_user = User(
-        username = register_data.username,
-        email = register_data.email,
-        password_hash = hashed_password
+        username=register_data.username,
+        email=register_data.email,
+        password_hash=hash_password(register_data.password),
+        role=register_data.role,
     )
     db.add(new_user)
     db.commit()
@@ -113,6 +62,7 @@ def register(
         "user": {
             "id": new_user.id,
             "username": new_user.username,
-            "email": new_user.email
-        }
+            "email": new_user.email,
+            "role": new_user.role,
+        },
     }

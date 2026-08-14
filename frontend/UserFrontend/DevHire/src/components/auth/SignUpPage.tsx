@@ -11,7 +11,8 @@ const SignUpPage: React.FC = () => {
     name: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    role: 'jobseeker' as 'jobseeker' | 'recruiter'
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const navigate = useNavigate();
@@ -57,7 +58,8 @@ const SignUpPage: React.FC = () => {
           body: JSON.stringify({
             username: formData.name,
             email: formData.email,
-            password: formData.password
+            password: formData.password,
+            role: formData.role
           })
         }
       );
@@ -73,7 +75,7 @@ const SignUpPage: React.FC = () => {
         id: result.user.id.toString(),
         name: result.user.username,
         email: result.user.email,
-        role: 'jobseeker' as const,
+        role: result.user.role as 'jobseeker' | 'recruiter',
         skills: [],
         experience: 0,
         location: '',
@@ -145,6 +147,36 @@ const SignUpPage: React.FC = () => {
             onChange={(value) => setFormData({ ...formData, email: value })}
             error={errors.email}
           />
+
+          <div>
+            <p className="mb-3 font-medium text-gray-700 dark:text-gray-300">
+              请选择注册身份
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, role: 'jobseeker' })}
+                className={`rounded-xl border px-4 py-3 font-semibold transition-colors ${
+                  formData.role === 'jobseeker'
+                    ? 'border-primary-500 bg-primary-500/15 text-primary-500'
+                    : 'border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-300'
+                }`}
+              >
+                求职者
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, role: 'recruiter' })}
+                className={`rounded-xl border px-4 py-3 font-semibold transition-colors ${
+                  formData.role === 'recruiter'
+                    ? 'border-primary-500 bg-primary-500/15 text-primary-500'
+                    : 'border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-300'
+                }`}
+              >
+                招聘者
+              </button>
+            </div>
+          </div>
 
           <AnimatedInput
             type="password"

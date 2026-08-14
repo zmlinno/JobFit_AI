@@ -39,25 +39,36 @@ const LoginPage: React.FC = () => {
       return;
     }
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1200));
+    try {
+      const response = await fetch('http://127.0.0.1:8000/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      const result = await response.json();
 
-    // Create user profile (in real app, this would come from your backend)
-    const user = {
-      id: Date.now().toString(),
-      name: formData.email.split('@')[0].replace(/[^a-zA-Z]/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-      email: formData.email,
-      avatar: `https://images.pexels.com/photos/${2000000 + Math.floor(Math.random() * 1000000)}/pexels-photo-${2000000 + Math.floor(Math.random() * 1000000)}.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop`,
-      role: 'jobseeker' as const,
-      skills: ['React', 'TypeScript', 'Node.js'],
-      experience: Math.floor(Math.random() * 8) + 1,
-      location: 'Remote',
-      remoteOnly: true,
-      salaryExpectation: { min: 80000, max: 150000, currency: 'USD' }
-    };
+      if (!response.ok) {
+        throw new Error(result.detail || '登录失败');
+      }
 
-    setUser(user);
-    navigate('/');
+      setUser({
+        id: result.user.id.toString(),
+        name: result.user.username,
+        email: result.user.email,
+        role: result.user.role as 'jobseeker' | 'recruiter',
+        skills: [],
+        experience: 0,
+        location: '',
+        remoteOnly: false,
+        salaryExpectation: { min: 0, max: 0, currency: 'USD' }
+      });
+      navigate('/');
+    } catch (error) {
+      setErrors({
+        general: error instanceof Error ? error.message : '无法连接后端服务器'
+      });
+      throw error;
+    }
   };
 
   return (

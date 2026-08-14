@@ -13,7 +13,7 @@ class User(Base):
     )
 
     password_hash = Column(
-        String(50),
+        String(255),
         nullable = False
     )
 
@@ -21,4 +21,10 @@ class User(Base):
         String(50),
         unique=True,
         nullable=False
+    )
+
+    role = Column(
+        String(20),
+        nullable=False,
+        default="jobseeker"
     )

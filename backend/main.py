@@ -2,8 +2,10 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from app.models.user import User
+from app.models.job import JobPosting
 from app.database.database import Base,engine
 from app.api.auth import router as auth_router
+from app.api.jobs import router as jobs_router
 
 app = FastAPI()
 
@@ -11,6 +13,11 @@ Base.metadata.create_all(bind = engine)
 app.include_router(
     auth_router,
     prefix="/auth"
+)
+app.include_router(
+    jobs_router,
+    prefix="/jobs",
+    tags=["jobs"]
 )
 
 

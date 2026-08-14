@@ -4,6 +4,7 @@ import { useJobStore } from './store/jobStore';
 import Layout from './components/layout/Layout';
 import Home from './pages/Home';
 import Jobs from './pages/Jobs';
+import Recruiter from './pages/Recruiter';
 import SignUpPage from './components/auth/SignUpPage';
 import LoginPage from './components/auth/LoginPage';
 
@@ -48,6 +49,11 @@ function App() {
         <Route path="/jobs" element={
           <Layout>
             <Jobs />
+          </Layout>
+        } />
+        <Route path="/recruiter" element={
+          <Layout>
+            <Recruiter />
           </Layout>
         } />
         

@@ -6,12 +6,35 @@ import { useJobs } from '../../hooks/useJobs';
 import { useNavigate } from 'react-router-dom';
 import DarkModeToggle from './DarkModeToggle';
 
+const cDeveloperSuggestions = [
+  'C++개발자',
+  'C++ Linux 개발자',
+  'C/C++개발자',
+  'C++임베디드'
+];
+
+interface ApprovedJobNotification {
+  id: number;
+  title: string;
+  company_name: string;
+  status: string;
+}
+
 const Header: React.FC = () => {
   const { searchQuery, setSearchQuery, user, setUser, themeMode } = useJobStore();
   const { searchJobs } = useJobs({ autoFetch: false });
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [approvedNotifications, setApprovedNotifications] = useState<ApprovedJobNotification[]>([]);
+
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const filteredSuggestions = normalizedQuery.startsWith('c')
+    ? cDeveloperSuggestions.filter((suggestion) =>
+        suggestion.toLowerCase().includes(normalizedQuery)
+      )
+    : [];
 
   // Track scroll position for dynamic effects
   useEffect(() => {
@@ -23,6 +46,45 @@ const Header: React.FC = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    if (!user) {
+      setApprovedNotifications([]);
+      return;
+    }
+
+    const loadApprovalNotifications = async () => {
+      try {
+        const response = await fetch(`http://127.0.0.1:8000/jobs/mine/${user.id}`);
+
+        if (!response.ok) return;
+
+        const jobs: ApprovedJobNotification[] = await response.json();
+        const storageKey = `jobfit-seen-approvals-${user.id}`;
+        const seenIds: number[] = JSON.parse(localStorage.getItem(storageKey) || '[]');
+
+        setApprovedNotifications(
+          jobs.filter((job) => job.status === 'approved' && !seenIds.includes(job.id))
+        );
+      } catch {
+        setApprovedNotifications([]);
+      }
+    };
+
+    loadApprovalNotifications();
+  }, [user]);
+
+  const dismissApprovalNotifications = () => {
+    if (!user) return;
+
+    const storageKey = `jobfit-seen-approvals-${user.id}`;
+    const seenIds: number[] = JSON.parse(localStorage.getItem(storageKey) || '[]');
+    const updatedIds = [
+      ...new Set([...seenIds, ...approvedNotifications.map((job) => job.id)])
+    ];
+    localStorage.setItem(storageKey, JSON.stringify(updatedIds));
+    setApprovedNotifications([]);
+  };
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -131,14 +193,60 @@ const Header: React.FC = () => {
                 type="text"
                 placeholder="Search jobs, companies, or skills..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setShowSuggestions(true);
+                }}
+                onFocus={() => setShowSuggestions(true)}
+                onBlur={() => setShowSuggestions(false)}
                 className={getInputClasses()}
               />
+
+              {showSuggestions && filteredSuggestions.length > 0 && (
+                <div className="absolute top-full left-0 right-0 z-50 mt-2 overflow-hidden rounded-xl border border-gray-700 bg-gray-900 shadow-2xl">
+                  {filteredSuggestions.map((suggestion) => (
+                    <button
+                      key={suggestion}
+                      type="button"
+                      onMouseDown={(event) => {
+                        event.preventDefault();
+                        setSearchQuery(suggestion);
+                        setShowSuggestions(false);
+                      }}
+                      className="block w-full px-5 py-3 text-left text-gray-200 hover:bg-purple-500/20"
+                    >
+                      {suggestion}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </motion.form>
 
           {/* Desktop Actions - Separate boxes */}
           <div className="hidden md:flex items-center space-x-4">
+            <motion.button
+              type="button"
+              onClick={() => {
+                if (!user) {
+                  navigate('/login');
+                  return;
+                }
+
+                if (user.role !== 'recruiter') {
+                  window.alert('您不是招聘者');
+                  return;
+                }
+
+                navigate('/recruiter');
+              }}
+              className="px-4 py-3 rounded-xl border border-primary-500/50 bg-primary-500/10 text-primary-500 dark:text-primary-400 font-semibold"
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              채용자
+            </motion.button>
+
             {/* Theme Toggle - Separate box */}
             <motion.div
               className="bg-white/10 dark:bg-gray-800/30 backdrop-blur-sm rounded-xl p-2 border border-white/20 dark:border-gray-700/50"
@@ -251,6 +359,26 @@ const Header: React.FC = () => {
             )}
           </motion.button>
         </motion.div>
+
+        {approvedNotifications.length > 0 && (
+          <div className="mb-3 flex items-start justify-between gap-4 rounded-xl border border-green-500/30 bg-green-500/10 px-4 py-3 text-green-700 dark:text-green-300">
+            <div>
+              <p className="font-semibold">招聘公告审核通过</p>
+              {approvedNotifications.map((job) => (
+                <p key={job.id} className="text-sm">
+                  {job.company_name} 的“{job.title}”职位已经通过管理员审核并正式发布。
+                </p>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={dismissApprovalNotifications}
+              className="shrink-0 text-sm font-semibold"
+            >
+              知道了
+            </button>
+          </div>
+        )}
 
         {/* Mobile Menu */}
         <AnimatePresence>

@@ -1,6 +1,8 @@
 # 先定义注册数据的时候，我们需要 账号，密码，手机号，邮箱
 
 
+from typing import Literal
+
 from pydantic import BaseModel
 
 
@@ -14,6 +16,7 @@ class RegisterRequest(BaseModel):
     username:str
     password:str
     email:str
+    role: Literal["jobseeker", "recruiter"]
     
 
 #定义前端需要传过来的数据格式
